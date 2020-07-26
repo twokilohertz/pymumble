@@ -93,3 +93,12 @@ class VoiceTarget(Cmd):
         self.cmd = PYMUMBLE_MSG_TYPES_VOICETARGET
         self.parameters = {"id": voice_id,
                            "targets": targets}
+
+class UnlinkChannel(Cmd):
+    """Command to unlink channel"""
+
+    def __init__(self, params):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_CHANNELUNLINK
+        self.parameters = params
