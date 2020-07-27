@@ -74,7 +74,7 @@ class User(dict):
             actions["actor"] = message.actor
 
         for (field, value) in message.ListFields():
-            if field.name in ("session", "actor", "comment", "texture"):
+            if field.name in ("session", "actor", "comment", "texture", "plugin_context", "plugin_identity"):
                 continue
             actions.update(self.update_field(field.name, value))
 
@@ -207,6 +207,12 @@ class User(dict):
         params = {"session": self["session"],
                   "user_id": 0}
  
+        cmd = messages.ModUserState(self.mumble_object.users.myself_session, params)
+        self.mumble_object.execute_command(cmd)
+
+    def update_context(self, context_name):
+        params = {"session": self["session"],
+                  "plugin_context": context_name}
         cmd = messages.ModUserState(self.mumble_object.users.myself_session, params)
         self.mumble_object.execute_command(cmd)
 

@@ -100,6 +100,8 @@ class SoundOutput:
             sequence = VarInt(self.sequence).encode()
 
             udppacket = struct.pack('!B', header | self.target) + sequence + payload
+            if self.mumble_object.positional:
+                udppacket += struct.pack("fff", self.mumble_object.positional[0], self.mumble_object.positional[1], self.mumble_object.positional[2])
 
             self.Log.debug("audio packet to send: sequence:{sequence}, type:{type}, length:{len}".format(
                 sequence=self.sequence,
