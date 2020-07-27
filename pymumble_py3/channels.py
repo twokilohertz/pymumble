@@ -114,6 +114,21 @@ class Channels(dict):
         cmd = messages.RemoveChannel(channel_id)
         self.mumble_object.execute_command(cmd)
 
+    def unlink(self, channel_id=False):
+        """
+        Unlink every channels in server if channel_id is not given.
+        Unlink all channels which is linked to a specific channel if channel_id is given.
+        """
+
+        if channel_id:
+            if "links" in self[channel_id]:
+                cmd = messages.UnlinkChannel({"channel_id": channel_id, "remove_ids": self[channel_id]["links"]})
+                self.mumble_object.execute_command(cmd)
+        else:
+            for channel in list(self.values()):
+                if "links" in channel:
+                    cmd = messages.UnlinkChannel({"channel_id": channel['channel_id'], "remove_ids": channel["links"]})
+                    self.mumble_object.execute_command(cmd)
 
 class Channel(dict):
     """
@@ -197,3 +212,9 @@ class Channel(dict):
 
         cmd = messages.TextMessage(session, self["channel_id"], message)
         self.mumble_object.execute_command(cmd)
+
+    def unlink(self):
+        """Unlink all channels which is linked to a specific channel."""
+        if "links" in self:
+            cmd = messages.UnlinkChannel({"channel_id": self["channel_id"], "remove_ids": self["links"]})
+            self.mumble_object.execute_command(cmd)

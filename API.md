@@ -246,6 +246,11 @@ Return a nested list of the channel objects above this id.
 
 Return the first channel object matching the name.
 
+> `Mumble.channels.unlink(channel_id)`
+
+Unlink every channels in server if channel_id is not given.
+Unlink all channels which is linked to this id if channel_id is given.
+
 ## Channel object (accessible through Mumble.channels[channel_id] or Mumble.channels.find_by_name(Name))
 Contains the properties of the specific channel.
 Allow to move a user into it.
@@ -271,6 +276,10 @@ Send message into the specific channel.
 
 List all users currently in channel.
 After moving into a channel, it's normal to not have the list of user. Pymumble need few ms to update the list.
+
+> `Channel.unlink()`
+
+Unlink every channels which is linked to the channel.
 
 ## SoundOutput object (accessible through Mumble.sound_output)
 Takes care of encoding, packetizing and sending the audio to the server.
