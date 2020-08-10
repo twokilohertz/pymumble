@@ -69,7 +69,7 @@ class Mumble(threading.Thread):
         self.tokens = tokens
         self.__opus_profile = PYMUMBLE_AUDIO_TYPE_OPUS_PROFILE
         self.stereo = stereo
-        
+
         if stereo:
             self.Log.debug("Working in STEREO mode.")
         else:
@@ -189,7 +189,7 @@ class Mumble(threading.Thread):
         waiting for a message from the server for maximum self.loop_rate time
         take care of sending the ping
         take care of sending the queued commands to the server
-        check on every iteration for outgoing sound 
+        check on every iteration for outgoing sound
         check for disconnection
         """
         self.Log.debug("entering loop")
@@ -381,6 +381,8 @@ class Mumble(threading.Thread):
             mess.ParseFromString(message)
             self.Log.debug("message: ACL : %s", mess)
 
+            self.callbacks(PYMUMBLE_CLBK_ACLRECEIVED, mess)
+
         elif type == PYMUMBLE_MSG_TYPES_QUERYUSERS:
             mess = mumble_pb2.QueryUsers()
             mess.ParseFromString(message)
@@ -513,7 +515,7 @@ class Mumble(threading.Thread):
 
                     if newsound is None:  # In case audio have been disable for specific users
                         return
-                    
+
                     self.callbacks(PYMUMBLE_CLBK_SOUNDRECEIVED, self.users[session.value], newsound)
 
                     sequence.value += int(round(newsound.duration / 1000 * 10))  # add 1 sequence per 10ms of audio
@@ -672,6 +674,14 @@ class Mumble(threading.Thread):
             cmd.response = True
             self.commands.answer(cmd)
 
+        elif cmd.cmd == PYMUMBLE_CMD_QUERYACL:
+            acl = mumble_pb2.ACL()
+            acl.channel_id = cmd.parameters["channel_id"]
+            acl.query = True
+            self.send_message(PYMUMBLE_MSG_TYPES_ACL, acl)
+            cmd.response = True
+            self.commands.answer(cmd)
+
     def get_max_message_length(self):
         return self.server_max_message_length
 
@@ -680,7 +690,7 @@ class Mumble(threading.Thread):
 
     def my_channel(self):
         return self.channels[self.users.myself["channel_id"]]
-    
+
     def stop(self):
         self.reconnect = None
         self.exit = True

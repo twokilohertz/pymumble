@@ -218,3 +218,7 @@ class Channel(dict):
         if "links" in self:
             cmd = messages.UnlinkChannel({"channel_id": self["channel_id"], "remove_ids": self["links"]})
             self.mumble_object.execute_command(cmd)
+
+    def get_acl(self):
+        cmd = messages.QueryACL(self["channel_id"])
+        self.mumble_object.execute_command(cmd)

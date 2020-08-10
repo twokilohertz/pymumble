@@ -102,3 +102,12 @@ class UnlinkChannel(Cmd):
 
         self.cmd = PYMUMBLE_CMD_CHANNELUNLINK
         self.parameters = params
+
+class QueryACL(Cmd):
+    """Command to query ACL information for channel"""
+
+    def __init__(self, channel_id):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_QUERYACL
+        self.parameters = {"channel_id": channel_id}

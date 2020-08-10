@@ -72,6 +72,7 @@ Callback names are in `pymumble.constants` module, starting with `PYMUMBLE_CLBK_
 - `PYMUMBLE_CLBK_USERREMOVED`: send the removed user object and the mumble message as parameter
 - `PYMUMBLE_CLBK_SOUNDRECEIVED`: send the user object that received the sound and the SoundChunk object itself
 - `PYMUMBLE_CLBK_TEXTMESSAGERECEIVED`: send the received message
+- `PYMUMBLE_CLBK_ACLRECEIVED`: send the received acl permissions
 
 **Callbacks are executed within the library looping thread. Keep it's work short or you could have jitter issues!**
 
@@ -280,6 +281,20 @@ After moving into a channel, it's normal to not have the list of user. Pymumble 
 > `Channel.unlink()`
 
 Unlink every channels which is linked to the channel.
+
+> `Channel.get_acl()`
+
+Request an ACL permissions [object](https://github.com/mumble-voip/mumble/blob/master/src/Mumble.proto#L317) (requires bot have Write ACL permissions). This will invoke PYMUMBLE_CLBK_ACLRECEIVED. Example of usage:
+
+```
+def onacl(event):
+	for group in event.groups:
+		if event.group.name == "admin":
+			print("The admin IDs are: ", [user for user in group.add])
+
+Mumble.callbacks.set_callback(PYMUMBLE_CLBK_ACL_RECEIVED, onacl)
+Mumble.channels[0].get_acl() #Request ACL for root channel
+```
 
 ## SoundOutput object (accessible through Mumble.sound_output)
 Takes care of encoding, packetizing and sending the audio to the server.
