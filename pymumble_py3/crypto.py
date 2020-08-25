@@ -3,6 +3,7 @@ OCB2 crypto, broadly following the implementation from Mumble
 '''
 import struct
 import time
+from math import ceil
 
 import Crypto
 import Crypto.Random
@@ -169,14 +170,15 @@ def ocb_encrypt(aes, plain, nonce, *, insecure=False):
     plain_block = b''
 
     pos = 0
+    encrypted = bytearray(ceil(len(plain) / AES_BLOCK_SIZE) * AES_BLOCK_SIZE)
     while len(plain) - pos > AES_BLOCK_SIZE:
         plain_block = plain[pos:pos + AES_BLOCK_SIZE]
         delta = S2(delta)
         encrypted_block = xor(delta, aes.encrypt(xor(delta, plain_block)))
         checksum = xor(checksum, plain_block)
 
+        encrypted[pos:pos + AES_BLOCK_SIZE] = encrypted_block
         pos += AES_BLOCK_SIZE
-        encrypted_blocks.append(encrypted_block)
 
     # Counter-cryptanalysis described in section 9 of https://eprint.iacr.org/2019/311
     # For an attack, the second to last block (i.e. the last iteration of this loop)
@@ -189,23 +191,22 @@ def ocb_encrypt(aes, plain, nonce, *, insecure=False):
     delta = S2(delta)
     pad_in = struct.pack('>QQ', 0, len_remaining * 8)
     pad = aes.encrypt(xor(pad_in, delta))
-    plain_padded = plain[pos:] + pad[len_remaining - AES_BLOCK_SIZE:]
+    plain_block = plain[pos:] + pad[len_remaining - AES_BLOCK_SIZE:]
 
-    checksum = xor(checksum, plain_padded)
-    encrypted_block = xor(pad, plain_padded)
-    encrypted_blocks.append(encrypted_block)
+    checksum = xor(checksum, plain_block)
+    encrypted_block = xor(pad, plain_block)
+    encrypted[pos:] = encrypted_block
 
     delta = xor(delta, S2(delta))
     tag = aes.encrypt(xor(delta, checksum))
 
-    encrypted = b''.join(encrypted_blocks)
     return encrypted, tag
 
 
 def ocb_decrypt(aes, encrypted, nonce, len_plain, *, insecure=False):
     delta = aes.encrypt(nonce)
     checksum = bytes(AES_BLOCK_SIZE)
-    plain_blocks = []
+    plain = bytearray(len_plain)
 
     pos = 0
     while len_plain - pos > AES_BLOCK_SIZE:
@@ -215,7 +216,7 @@ def ocb_decrypt(aes, encrypted, nonce, len_plain, *, insecure=False):
         plain_block = xor(delta, tmp)
         checksum = xor(checksum, plain_block)
 
-        plain_blocks.append(plain_block)
+        plain[pos:pos + AES_BLOCK_SIZE] = plain_block
         pos += AES_BLOCK_SIZE
 
     len_remaining = len_plain - pos
@@ -223,24 +224,21 @@ def ocb_decrypt(aes, encrypted, nonce, len_plain, *, insecure=False):
     pad_in = struct.pack('>QQ', 0, len_remaining * 8)
     pad = aes.encrypt(xor(pad_in, delta))
     encrypted_zeropad = encrypted[pos:] + bytes(AES_BLOCK_SIZE - len_remaining)
-    plain_padded = xor(encrypted_zeropad, pad)
+    plain_block = xor(encrypted_zeropad, pad)
 
-    checksum = xor(checksum, plain_padded)
-    plain_block = plain_padded[:len_remaining]
-    plain_blocks.append(plain_block)
+    checksum = xor(checksum, plain_block)
+    plain[pos:] = plain_block[:len_remaining]
 
     # Counter-cryptanalysis described in section 9 of https://eprint.iacr.org/2019/311
     # In an attack, the decrypted last block would need to equal `delta ^ len(128)`.
     # With a bit of luck (or many packets), smaller values than 128 (i.e. non-full blocks) are also
-    # feasible, so we check `plain_padded` instead of `plain`.
+    # feasible, so we check `plain_block` instead of `plain`.
     # Since our `len` only ever modifies the last byte, we simply check all remaining ones.
-    if not insecure and plain_padded[:-1] == delta[:-1]:
+    if not insecure and plain_block[:-1] == delta[:-1]:
         raise DecryptFailedException('Possibly tampered/able block, discarding.')
 
     delta = xor(delta, S2(delta))
     tag = aes.encrypt(xor(delta, checksum))
-
-    plain = b''.join(plain_blocks)
     return plain, tag
 
 
