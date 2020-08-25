@@ -100,9 +100,6 @@ class CryptStateOCB2:
             raise Exception('decrypt_iv has wrong length')
         self._decrypt_iv = bytearray(div)
 
-    def is_valid(self) -> bool:
-        return self._aes is not None
-
     def gen_key(self):
         """
         Randomly generate new keys
