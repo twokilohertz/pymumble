@@ -10,11 +10,11 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
 
-AES_BLOCK_SIZE = 128 // 8
+AES_BLOCK_SIZE = 128 // 8       # Number of bytes in a block
 AES_KEY_SIZE_BITS = 128
 AES_KEY_SIZE_BYTES = AES_KEY_SIZE_BITS // 8
-SHIFTBITS = 63
-MAX64 = (1 << 64) - 1
+SHIFTBITS = 63                  # Shift size for S2 operation
+MAX64 = (1 << 64) - 1           # Maximum value of uint64
 
 
 class EncryptFailedException(Exception):
@@ -26,6 +26,37 @@ class DecryptFailedException(Exception):
 
 
 class CryptStateOCB2:
+    """
+    State tracker for AES-OCB2 crypto.
+    All encryption/decryption should be done through this class
+     and not the `ocb_*` functions.
+
+    A random key and IVs are chosen upon initialization; these can be
+    replaced using `set_key`.
+
+    Attributes intended for external access:
+        raw_key
+        encrypt_iv
+        decrypt_iv
+        decrypt_history
+
+        uiGood
+        uiLate
+        uiLost
+        tLastGood
+    """
+    _raw_key: bytes         # AES key; access through `raw_key` property
+    _aes: AES.AESCipher     # pycrypto AES cipher object, replaced when `raw_key` is changed
+    _encrypt_iv: bytearray  # IV for encryption, access through `encrypt_iv` property
+    _decrypt_iv: bytearray  # IV for decryption, access through `decrypt_iv` property
+    decrypt_history: bytearray  # History of previous decrypt_iv values
+
+    # Statistics:
+    uiGood: int  # Number of packets successfully decrypted
+    uiLate: int  # Number of packets which arrived out of order
+    uiLost: int  # Number of packets which did not arrive in order (may arrive late)
+    tLastGood: float  # time.perf_counter() value for latest good packet
+
     def __init__(self):
         self.uiGood = 0
         self.uiLate = 0
@@ -36,7 +67,7 @@ class CryptStateOCB2:
         self._encrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
         self._decrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
         self._aes = None
-        self.decrypt_history = [0] * 0x100
+        self.decrypt_history = bytearray(0x100)
 
     @property
     def raw_key(self) -> bytes:
@@ -73,17 +104,39 @@ class CryptStateOCB2:
         return self._aes is not None
 
     def gen_key(self):
+        """
+        Randomly generate new keys
+        """
         self.raw_key = get_random_bytes(AES_KEY_SIZE_BYTES)
         self.encrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
         self.decrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
 
-    def set_key(self, rkey: bytes, eiv: bytearray, div: bytearray):
-        self.raw_key = rkey
-        self.encrypt_iv = eiv
-        self.decrypt_iv = div
+    def set_key(self, raw_key: bytes, encrypt_iv: bytearray, decrypt_iv: bytearray):
+        """
+        Set new keys
+
+        Args:
+            raw_key: AES key
+            encrypt_iv: IV for encryption
+            decrypt_iv: IV for decrpytion
+        """
+        self.raw_key = raw_key
+        self.encrypt_iv = encrypt_iv
+        self.decrypt_iv = decrypt_iv
 
     def encrypt(self, source: bytes) -> bytes:
-        # First, increase our IV.
+        """
+        Encrypt a message
+
+        Args:
+            source: The plaintext bytes to be encrypted
+
+        Returns:
+            Encrypted (ciphertext) bytes
+
+        Raises:
+            EncryptFailedException if `source` would result in a vulnerable packet
+        """
         eiv = increment_iv(self.encrypt_iv)
         self.encrypt_iv = eiv
 
@@ -93,6 +146,22 @@ class CryptStateOCB2:
         return head + dst
 
     def decrypt(self, source: bytes, len_plain: int) -> bytes:
+        """
+        Decrypt a message
+
+        Args:
+            source: The ciphertext bytes to be decrypted
+            len_plain: The length of the plaintext
+
+        Returns:
+            Decrypted (plaintext) bytes
+
+        Raises:
+            DecryptFailedException:
+                - if `source` is too short
+                - packet is out of order or duplicate
+                - packet was could have been tampered with
+        """
         if len(source) < 4:
             raise DecryptFailedException('Source <4 bytes long!')
 
@@ -170,6 +239,21 @@ def ocb_encrypt(aes: AES.AESCipher,
                 *,
                 insecure=False,
                 ) -> Tuple[bytes, bytes]:
+    """
+    Encrypt a message.
+    This should be called from CryptStateOCB2.encrypt() and not independently.
+
+    Args:
+        aes: AES-ECB cipher object
+        plain: The plaintext bytes to be encrypted
+        nonce: The encryption IV
+
+    Returns:
+        Encrypted (ciphertext) bytes and tag
+
+    Raises:
+        EncryptFailedException if `source` would result in a vulnerable packet
+    """
     delta = aes.encrypt(nonce)
     checksum = bytes(AES_BLOCK_SIZE)
     plain_block = b''
@@ -215,6 +299,25 @@ def ocb_decrypt(aes: AES.AESCipher,
                 *,
                 insecure=False,
                 ) -> Tuple[bytes, bytes]:
+    """
+    Decrypt a message.
+    This should be called from CryptStateOCB2.decrypt() and not independently.
+
+    Args:
+        aes: AES-ECB cipher object
+        encrypted: The ciphertext bytes to be decrypted
+        nonce: The decryption IV
+        len_plain: The length of the desired plaintext
+
+    Returns:
+        Decrypted (plaintext) bytes and tag
+
+    Raises:
+        DecryptFailedException:
+            - if `source` is too short
+            - packet is out of order or duplicate
+            - packet was could have been tampered with
+    """
     delta = aes.encrypt(nonce)
     checksum = bytes(AES_BLOCK_SIZE)
     plain = bytearray(len_plain)
