@@ -1,12 +1,13 @@
 '''
 OCB2 crypto, broadly following the implementation from Mumble
 '''
+from typing import Tuple
 import struct
 import time
 from math import ceil
 
-import Crypto
-import Crypto.Random
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
 
 
 AES_BLOCK_SIZE = 128 // 8
@@ -31,9 +32,9 @@ class CryptStateOCB2:
         self.uiLost = 0
         self.tLastGood = 0
 
-        self._raw_key = Crypto.Random.get_random_bytes(AES_KEY_SIZE_BYTES)
-        self._encrypt_iv = Crypto.Random.get_random_bytes(AES_BLOCK_SIZE)
-        self._decrypt_iv = Crypto.Random.get_random_bytes(AES_BLOCK_SIZE)
+        self._raw_key = get_random_bytes(AES_KEY_SIZE_BYTES)
+        self._encrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
+        self._decrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
         self._aes = None
         self.decrypt_history = [0] * 0x100
 
@@ -44,9 +45,9 @@ class CryptStateOCB2:
     @raw_key.setter
     def raw_key(self, rkey: bytes):
         if len(rkey) != AES_KEY_SIZE_BYTES:
-            raise Exception('raw_key has long length')
+            raise Exception('raw_key has wrong length')
         self._raw_key = bytes(rkey)
-        self._aes = Crypto.Cipher.AES.new(key=self.raw_key, mode=Crypto.Cipher.AES.MODE_ECB)
+        self._aes = AES.new(key=self.raw_key, mode=AES.MODE_ECB)
 
     @property
     def encrypt_iv(self) -> bytearray:
@@ -55,7 +56,7 @@ class CryptStateOCB2:
     @encrypt_iv.setter
     def encrypt_iv(self, eiv: bytearray):
         if len(eiv) != AES_BLOCK_SIZE:
-            raise Exception('encrypt_iv has long length')
+            raise Exception('encrypt_iv wrong length')
         self._encrypt_iv = bytearray(eiv)
 
     @property
@@ -65,18 +66,18 @@ class CryptStateOCB2:
     @decrypt_iv.setter
     def decrypt_iv(self, div: bytearray):
         if len(div) != AES_BLOCK_SIZE:
-            raise Exception('decrypt_iv has long length')
+            raise Exception('decrypt_iv has wrong length')
         self._decrypt_iv = bytearray(div)
 
     def is_valid(self) -> bool:
         return self._aes is not None
 
     def gen_key(self):
-        self.raw_key = Crypto.Random.get_random_bytes(AES_KEY_SIZE_BYTES)
-        self.encrypt_iv = Crypto.Random.get_random_bytes(AES_BLOCK_SIZE)
-        self.decrypt_iv = Crypto.Random.get_random_bytes(AES_BLOCK_SIZE)
+        self.raw_key = get_random_bytes(AES_KEY_SIZE_BYTES)
+        self.encrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
+        self.decrypt_iv = get_random_bytes(AES_BLOCK_SIZE)
 
-    def set_key(self, rkey: bytes, eiv: bytes, div: bytes):
+    def set_key(self, rkey: bytes, eiv: bytearray, div: bytearray):
         self.raw_key = rkey
         self.encrypt_iv = eiv
         self.decrypt_iv = div
@@ -163,10 +164,14 @@ class CryptStateOCB2:
         return dst
 
 
-def ocb_encrypt(aes, plain, nonce, *, insecure=False):
+def ocb_encrypt(aes: AES.AESCipher,
+                plain: bytes,
+                nonce: bytes,
+                *,
+                insecure=False,
+                ) -> Tuple[bytes, bytes]:
     delta = aes.encrypt(nonce)
     checksum = bytes(AES_BLOCK_SIZE)
-    encrypted_blocks = []
     plain_block = b''
 
     pos = 0
@@ -203,7 +208,13 @@ def ocb_encrypt(aes, plain, nonce, *, insecure=False):
     return encrypted, tag
 
 
-def ocb_decrypt(aes, encrypted, nonce, len_plain, *, insecure=False):
+def ocb_decrypt(aes: AES.AESCipher,
+                encrypted: bytes,
+                nonce: bytes,
+                len_plain: int,
+                *,
+                insecure=False,
+                ) -> Tuple[bytes, bytes]:
     delta = aes.encrypt(nonce)
     checksum = bytes(AES_BLOCK_SIZE)
     plain = bytearray(len_plain)
