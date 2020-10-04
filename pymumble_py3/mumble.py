@@ -376,6 +376,8 @@ class Mumble(threading.Thread):
             mess.ParseFromString(message)
             self.Log.debug("message: PermissionDenied : %s", mess)
 
+            self.callbacks(PYMUMBLE_CLBK_PERMISSIONDENIED, mess)
+
         elif type == PYMUMBLE_MSG_TYPES_ACL:
             mess = mumble_pb2.ACL()
             mess.ParseFromString(message)
@@ -673,7 +675,14 @@ class Mumble(threading.Thread):
             self.send_message(PYMUMBLE_MSG_TYPES_USERSTATE, userstate)
             cmd.response = True
             self.commands.answer(cmd)
-
+        elif cmd.cmd == PYMUMBLE_CMD_REMOVEUSER:
+            userremove = mumble_pb2.UserRemove()
+            userremove.session = cmd.parameters["session"]
+            userremove.reason = cmd.parameters["reason"]
+            userremove.ban = cmd.parameters["ban"]
+            self.send_message(PYMUMBLE_MSG_TYPES_USERREMOVE, userremove)
+            cmd.response = True
+            self.commands.answer(cmd)
         elif cmd.cmd == PYMUMBLE_CMD_QUERYACL:
             acl = mumble_pb2.ACL()
             acl.channel_id = cmd.parameters["channel_id"]
@@ -690,6 +699,9 @@ class Mumble(threading.Thread):
 
     def my_channel(self):
         return self.channels[self.users.myself["channel_id"]]
+
+    def denial_type(self, n):
+        return mumble_pb2.PermissionDenied.DenyType.Name(n)
 
     def stop(self):
         self.reconnect = None

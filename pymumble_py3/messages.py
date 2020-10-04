@@ -61,6 +61,14 @@ class ModUserState(Cmd):
         self.cmd = PYMUMBLE_CMD_MODUSERSTATE
         self.parameters = params
 
+class RemoveUser(Cmd):
+    """Command to kick (ban=False) or ban (ban=True) a user"""
+
+    def __init__(self, session, params):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_REMOVEUSER
+        self.parameters = params
 
 class CreateChannel(Cmd):
     """Command to create channel"""
