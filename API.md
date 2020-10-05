@@ -69,10 +69,11 @@ Callback names are in `pymumble.constants` module, starting with `PYMUMBLE_CLBK_
 - `PYMUMBLE_CLBK_CHANNELREMOVED`: send the removed channel object as parameter
 - `PYMUMBLE_CLBK_USERCREATED`: send the added user object as parameter
 - `PYMUMBLE_CLBK_USERUPDATED`: send the updated user object and a dict with all the modified fields as parameter
-- `PYMUMBLE_CLBK_USERREMOVED`: send the removed user object and the mumble message as parameter
+- `PYMUMBLE_CLBK_USERREMOVED`: send the removed user object and the removal event as parameters. The event contains only a `session` field if a user left manually, otherwise it adds an `actor` (person who kicked/banned), `reason`, and `ban` (`True`=ban, `False`=kick).
 - `PYMUMBLE_CLBK_SOUNDRECEIVED`: send the user object that received the sound and the SoundChunk object itself
 - `PYMUMBLE_CLBK_TEXTMESSAGERECEIVED`: send the received message
 - `PYMUMBLE_CLBK_ACLRECEIVED`: send the received acl permissions
+- `PYMUMBLE_CLBK_PERMISSIONDENIED`: send the information regarding what caused the action to fail. `event.type` corresponds to [this DenyType enum](https://github.com/mumble-voip/mumble/blob/34c9b2503361163b649a35598de7de727a64148f/src/Mumble.proto#L271).
 
 **Callbacks are executed within the library looping thread. Keep it's work short or you could have jitter issues!**
 
@@ -120,6 +121,10 @@ Contain the session number of the `pymumble` connection itself.
 
 Is a shortcut to `Mumble.users[Mumble.users.myself_session]`, pointing to the User object of the current connection.
 
+> `Mumble.denial_type(n)`
+
+Is a shortcut to `mumble_pb2.PermissionDenied.DenyType.Name(n)`, the associated enum name for an action denial cause. (`n` comes from the callback for `PYMUMBLE_CLBK_PERMISSIONDENIED`: `event.type`.
+
 ## User object (accessible through Mumble.users[session] or Mumble.users.myself
 Contain the users information and method to act on them.
 User also contain an instance of the SoundQueue object, containing the audio received from this user.
@@ -159,6 +164,11 @@ Send a message to the specific user.
 > `user.register()`
 
 Send a register demand to the murmur server (you need to have a certfile
+
+> `user.kick()`
+> `user.ban()`
+
+You can pass a keyword argument `reason=` if you'd like, defaults to empty string.
 
 ## SoundQueue object (accessible through User.sound)
 Contains the audio received from a specific user.
@@ -330,3 +340,4 @@ Set Whisper to a specific Channel
 > ``Mumble.sound_output.remove_whisper()``
 
 Remove the previously set Whisper
+

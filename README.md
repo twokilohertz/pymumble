@@ -46,18 +46,20 @@ For client application examples, you can check this list :
 - Support OPUS. Speex is not supported
 - Receive and send audio, get users and channels status
 - Set properties for users (mute, comments, etc.) and go to a specific channel
+- Kick and ban users
 - Callback mechanism to react on server events
 - Manage the blobs (images, long comments, etc.)
 - Can send text messages to user and channel
 - Ping statistics
 - Audio targets (whisper, etc.)
+- Read ACL groups
 
 ### What is missing:
 
 >  I don't need these features, so if you want one, open an issue and I will work on it.
 
 - UDP media. Currently it works only in TCP tunneling mode (the standard fallback of Mumble when UDP is not working)
-- Server management (user creation and registration, ACLs, groups, bans, etc.)
+- Some server management features (user creation, editing ACLs, etc.)
 - Positioning is not managed, but it should be easy to add
 - Probably a lot of other small features
 - **WONTFIX** The **Python 2** version is available in the [master branch](https://github.com/azlux/pymumble/tree/master). It's working! But since we have moved on to Python 3, the Python 2 version will not receive future improvements.
