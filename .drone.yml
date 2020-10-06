@@ -11,6 +11,9 @@ steps:
       password:
         from_secret: pypi_password
 
+node:
+  location: local
+
 trigger:
   event:
     - tag
