@@ -246,3 +246,19 @@ class User(dict):
 
         cmd = messages.TextPrivateMessage(self["session"], message)
         self.mumble_object.execute_command(cmd)
+
+    def kick(self, reason=""):
+        params = {"session": self["session"],
+                  "reason": reason,
+                  "ban": False}
+
+        cmd = messages.RemoveUser(self.mumble_object.users.myself_session, params)
+        self.mumble_object.execute_command(cmd)
+
+    def ban(self, reason=""):
+        params = {"session": self["session"],
+                  "reason": reason,
+                  "ban": True}
+
+        cmd = messages.RemoveUser(self.mumble_object.users.myself_session, params)
+        self.mumble_object.execute_command(cmd)
