@@ -548,7 +548,7 @@ class Mumble(threading.Thread):
 
     def set_codec_profile(self, profile):
         """set the audio profile"""
-        if profile in ["audio", "voip"]:
+        if profile in ["audio", "voip", "restricted_lowdelay"]:
             self.__opus_profile = profile
         else:
             raise ValueError("Unknown profile: " + str(profile))
