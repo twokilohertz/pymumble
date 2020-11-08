@@ -72,7 +72,7 @@ This thread implements a loop which takes care of the pings, sends commands to t
 checks for incoming messages including audio, and checks for audio to be sent out.
 The rate of this loop is controlled by how long it will wait for an incoming message before continuing.
 
-You can check if the thread is alive with `mumble_object.isAlive()`.
+You can check if the thread is alive with `mumble_object.is_alive()`.
 The Mumble thread will stop if it disconnects from the server.
 This can be useful if you need to restart the thread when using a supervisor.
 
