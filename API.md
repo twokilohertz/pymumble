@@ -265,10 +265,10 @@ Return a nested list of the channel objects above this id.
 
 Return the first channel object matching the name.
 
-> `Mumble.channels.unlink(channel_id)`
+> `Mumble.channels.unlink_every_channel()`
 
-Unlink every channels in server if channel_id is not given.
-Unlink all channels which is linked to this id if channel_id is given.
+Unlink every channels in server.
+So there will be no channel linked to other channel.
 
 ## Channel object (accessible through Mumble.channels[channel_id] or Mumble.channels.find_by_name(Name))
 Contains the properties of the specific channel.
@@ -296,9 +296,17 @@ Send message into the specific channel.
 List all users currently in channel.
 After moving into a channel, it's normal to not have the list of user. Pymumble need few ms to update the list.
 
-> `Channel.unlink()`
+> `Channel.link(channel_id)`
 
-Unlink every channels which is linked to the channel.
+Link selected channel with other channel.
+
+> `Channel.unlink(channel_id)`
+
+Unlink one channel which is linked to the selected channel.
+
+> `Channel.unlink_all()`
+
+Unlink every channels which is linked to the selected channel.
 
 > `Channel.rename_channel(name)`
 

@@ -110,13 +110,22 @@ class VoiceTarget(Cmd):
         self.parameters = {"id": voice_id,
                            "targets": targets}
 
+class LinkChannel(Cmd):
+    """Command to link channel"""
+
+    def __init__(self, params):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_LINKCHANNEL
+        self.parameters = params
+
 class UnlinkChannel(Cmd):
     """Command to unlink channel"""
 
     def __init__(self, params):
         Cmd.__init__(self)
 
-        self.cmd = PYMUMBLE_CMD_CHANNELUNLINK
+        self.cmd = PYMUMBLE_CMD_UNLINKCHANNEL
         self.parameters = params
 
 class QueryACL(Cmd):
