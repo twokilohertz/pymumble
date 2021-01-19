@@ -245,9 +245,17 @@ Return a list of all the children objects for a channel id.
 
 Return a (nested) list of the channels above this id.
 
+> `Mumble.channels.new_channel(parent_id, name, temporary=False)`
+
+Create a channel with the given parameter.
+Set temporary to True to create temporary channel (The bot automatically entered the new channel).
+
 > `Mumble.channels.remove_channel(channel_id)`
 
 Remove channel with the given id.
+
+**Don't forget to give the bot related acl to do administration job.**
+Using certificate and register the bot will ensure the bot can do the administration job.
 
 > `Mumble.channels.get_tree(channel_id)`
 

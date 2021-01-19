@@ -106,8 +106,8 @@ class Channels(dict):
         err = "Channel %s does not exists" % name
         raise UnknownChannelError(err)
 
-    def new_channel(self, parent, name, temporary=True):
-        cmd = messages.CreateChannel(parent, name, temporary)
+    def new_channel(self, parent_id, name, temporary=False):
+        cmd = messages.CreateChannel(parent_id, name, temporary)
         self.mumble_object.execute_command(cmd)
 
     def remove_channel(self, channel_id):
