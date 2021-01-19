@@ -219,6 +219,46 @@ class Channel(dict):
             cmd = messages.UnlinkChannel({"channel_id": self["channel_id"], "remove_ids": self["links"]})
             self.mumble_object.execute_command(cmd)
 
+    def rename_channel(self, name):
+        params = {
+            'channel_id': self['channel_id'],
+            'name': name
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def move_channel(self, new_parent_id):
+        params = {
+            'channel_id': self['channel_id'],
+            'parent': new_parent_id
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def set_channel_position(self, position):
+        params = {
+            'channel_id': self['channel_id'],
+            'position': position
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def set_channel_max_users(self, max_users):
+        params = {
+            'channel_id': self['channel_id'],
+            'max_users': max_users
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def set_channel_description(self, description):
+        params = {
+            'channel_id': self['channel_id'],
+            'description': description
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
     def get_acl(self):
         cmd = messages.QueryACL(self["channel_id"])
         self.mumble_object.execute_command(cmd)

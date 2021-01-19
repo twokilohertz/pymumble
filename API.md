@@ -248,7 +248,7 @@ Return a (nested) list of the channels above this id.
 > `Mumble.channels.new_channel(parent_id, name, temporary=False)`
 
 Create a channel with the given parameter.
-Set temporary to True to create temporary channel (The bot automatically entered the new channel).
+Set temporary to True to create temporary channel (The bot will automatically entered the new channel).
 
 > `Mumble.channels.remove_channel(channel_id)`
 
@@ -299,6 +299,30 @@ After moving into a channel, it's normal to not have the list of user. Pymumble 
 > `Channel.unlink()`
 
 Unlink every channels which is linked to the channel.
+
+> `Channel.rename_channel(name)`
+
+Rename channel with given name (str).
+
+> `Channel.move_channel(new_parent_id)`
+
+Move channel inside new_parent_id (int).
+**Use Mumble.channels.find_by_name(name).get_id()** to get channel id
+
+> `Channel.set_channel_position(position)`
+
+Change channel position with given position (int).
+Smaller position will place channel in the top.
+Higher position will place channel in the bottom.
+Negative integer can also be used, and it will be in the top of positive integer.
+
+> `Channel.set_channel_max_users(max_users)`
+
+Change channel max users with given max_users (int).
+
+> `Channel.set_channel_description()`
+
+Change channel description with given max_users (str).
 
 > `Channel.get_acl()`
 

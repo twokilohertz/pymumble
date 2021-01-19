@@ -91,6 +91,14 @@ class RemoveChannel(Cmd):
         self.cmd = PYMUMBLE_MSG_TYPES_CHANNELREMOVE
         self.parameters = {"channel_id": channel_id}
 
+class UpdateChannel(Cmd):
+    """Command to update channel"""
+
+    def __init__(self, params):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_UPDATECHANNEL
+        self.parameters = params
 
 class VoiceTarget(Cmd):
     """Command to create a whisper"""
