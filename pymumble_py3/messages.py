@@ -91,6 +91,14 @@ class RemoveChannel(Cmd):
         self.cmd = PYMUMBLE_MSG_TYPES_CHANNELREMOVE
         self.parameters = {"channel_id": channel_id}
 
+class UpdateChannel(Cmd):
+    """Command to update channel"""
+
+    def __init__(self, params):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_UPDATECHANNEL
+        self.parameters = params
 
 class VoiceTarget(Cmd):
     """Command to create a whisper"""
@@ -102,13 +110,22 @@ class VoiceTarget(Cmd):
         self.parameters = {"id": voice_id,
                            "targets": targets}
 
+class LinkChannel(Cmd):
+    """Command to link channel"""
+
+    def __init__(self, params):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_LINKCHANNEL
+        self.parameters = params
+
 class UnlinkChannel(Cmd):
     """Command to unlink channel"""
 
     def __init__(self, params):
         Cmd.__init__(self)
 
-        self.cmd = PYMUMBLE_CMD_CHANNELUNLINK
+        self.cmd = PYMUMBLE_CMD_UNLINKCHANNEL
         self.parameters = params
 
 class QueryACL(Cmd):

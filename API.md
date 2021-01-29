@@ -245,9 +245,17 @@ Return a list of all the children objects for a channel id.
 
 Return a (nested) list of the channels above this id.
 
+> `Mumble.channels.new_channel(parent_id, name, temporary=False)`
+
+Create a channel with the given parameter.
+Set temporary to True to create temporary channel (The bot will automatically entered the new channel).
+
 > `Mumble.channels.remove_channel(channel_id)`
 
 Remove channel with the given id.
+
+**Don't forget to give the bot related acl to do administration job.**
+Using certificate and register the bot will ensure the bot can do the administration job.
 
 > `Mumble.channels.get_tree(channel_id)`
 
@@ -257,10 +265,10 @@ Return a nested list of the channel objects above this id.
 
 Return the first channel object matching the name.
 
-> `Mumble.channels.unlink(channel_id)`
+> `Mumble.channels.unlink_every_channel()`
 
-Unlink every channels in server if channel_id is not given.
-Unlink all channels which is linked to this id if channel_id is given.
+Unlink every channels in server.
+So there will be no channel linked to other channel.
 
 ## Channel object (accessible through Mumble.channels[channel_id] or Mumble.channels.find_by_name(Name))
 Contains the properties of the specific channel.
@@ -288,9 +296,41 @@ Send message into the specific channel.
 List all users currently in channel.
 After moving into a channel, it's normal to not have the list of user. Pymumble need few ms to update the list.
 
-> `Channel.unlink()`
+> `Channel.link(channel_id)`
 
-Unlink every channels which is linked to the channel.
+Link selected channel with other channel.
+
+> `Channel.unlink(channel_id)`
+
+Unlink one channel which is linked to the selected channel.
+
+> `Channel.unlink_all()`
+
+Unlink every channels which is linked to the selected channel.
+
+> `Channel.rename_channel(name)`
+
+Rename channel with given name (str).
+
+> `Channel.move_channel(new_parent_id)`
+
+Move channel inside new_parent_id (int).
+**Use Mumble.channels.find_by_name(name).get_id()** to get channel id
+
+> `Channel.set_channel_position(position)`
+
+Change channel position with given position (int).
+Smaller position will place channel in the top.
+Higher position will place channel in the bottom.
+Negative integer can also be used, and it will be in the top of positive integer.
+
+> `Channel.set_channel_max_users(max_users)`
+
+Change channel max users with given max_users (int).
+
+> `Channel.set_channel_description()`
+
+Change channel description with given max_users (str).
 
 > `Channel.get_acl()`
 

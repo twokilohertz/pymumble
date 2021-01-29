@@ -106,29 +106,23 @@ class Channels(dict):
         err = "Channel %s does not exists" % name
         raise UnknownChannelError(err)
 
-    def new_channel(self, parent, name, temporary=True):
-        cmd = messages.CreateChannel(parent, name, temporary)
+    def new_channel(self, parent_id, name, temporary=False):
+        cmd = messages.CreateChannel(parent_id, name, temporary)
         self.mumble_object.execute_command(cmd)
 
     def remove_channel(self, channel_id):
         cmd = messages.RemoveChannel(channel_id)
         self.mumble_object.execute_command(cmd)
 
-    def unlink(self, channel_id=False):
+    def unlink_every_channel(self):
         """
-        Unlink every channels in server if channel_id is not given.
-        Unlink all channels which is linked to a specific channel if channel_id is given.
+        Unlink every channels in server.
+        So there will be no channel linked to other channel.
         """
-
-        if channel_id:
-            if "links" in self[channel_id]:
-                cmd = messages.UnlinkChannel({"channel_id": channel_id, "remove_ids": self[channel_id]["links"]})
+        for channel in list(self.values()):
+            if "links" in channel:
+                cmd = messages.UnlinkChannel({"channel_id": channel['channel_id'], "remove_ids": channel["links"]})
                 self.mumble_object.execute_command(cmd)
-        else:
-            for channel in list(self.values()):
-                if "links" in channel:
-                    cmd = messages.UnlinkChannel({"channel_id": channel['channel_id'], "remove_ids": channel["links"]})
-                    self.mumble_object.execute_command(cmd)
 
 class Channel(dict):
     """
@@ -213,11 +207,61 @@ class Channel(dict):
         cmd = messages.TextMessage(session, self["channel_id"], message)
         self.mumble_object.execute_command(cmd)
 
-    def unlink(self):
+    def link(self, channel_id):
+        """Link selected channel with other channel"""
+        cmd = messages.LinkChannel({"channel_id": self["channel_id"], "add_id": channel_id})
+        self.mumble_object.execute_command(cmd)
+
+    def unlink(self, channel_id):
+        """Unlink one channel which is linked to a specific channel."""
+        cmd = messages.UnlinkChannel({"channel_id": self["channel_id"], "remove_ids": [channel_id]})
+        self.mumble_object.execute_command(cmd)
+
+    def unlink_all(self):
         """Unlink all channels which is linked to a specific channel."""
         if "links" in self:
             cmd = messages.UnlinkChannel({"channel_id": self["channel_id"], "remove_ids": self["links"]})
             self.mumble_object.execute_command(cmd)
+
+    def rename_channel(self, name):
+        params = {
+            'channel_id': self['channel_id'],
+            'name': name
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def move_channel(self, new_parent_id):
+        params = {
+            'channel_id': self['channel_id'],
+            'parent': new_parent_id
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def set_channel_position(self, position):
+        params = {
+            'channel_id': self['channel_id'],
+            'position': position
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def set_channel_max_users(self, max_users):
+        params = {
+            'channel_id': self['channel_id'],
+            'max_users': max_users
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
+
+    def set_channel_description(self, description):
+        params = {
+            'channel_id': self['channel_id'],
+            'description': description
+        }
+        cmd = messages.UpdateChannel(params)
+        self.mumble_object.execute_command(cmd)
 
     def get_acl(self):
         cmd = messages.QueryACL(self["channel_id"])
