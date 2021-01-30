@@ -1,10 +1,11 @@
 API
 ===
+
 ## main Mumble object
+
 > `class Mumble(host, user, port=64738, password='', certfile=None, keyfile=None, reconnect=False, tokens=[], stereo=False,debug=False)`
 
-It should be quite straightforward. `debug=True` will generate a LOT of stdout messages. Otherwise it should be silent in normal conditions.
-Reconnect should allow the library to reconnect automatically if the server disconnect it.
+It should be quite straightforward. `debug=True` will generate a LOT of stdout messages. Otherwise it should be silent in normal conditions. Reconnect should allow the library to reconnect automatically if the server disconnect it.
 
 The `tokens` parameter is a list of tokens for the channels access tokens
 
@@ -16,52 +17,48 @@ The `certfile` parameter takes the path to a Mumble certificate in `.pem` format
 
 The `stereo` allow you to send stereo audio, only available with compatible mumble version (>1.3)
 
-> `Mumble.start()`
-
 Start the library thread and the connection process
 
-> `Mumble.is_ready()`
+> `Mumble.start()`
 
 Block until the connection process is concluded.
 
-> `Mumble.set_bandwidth(int)`
+> `Mumble.is_ready()`
 
 Set (in bit per seconds) the allowed total outgoing bandwidth of the library. Can be limited by the server.
 
-> `Mumble.set_application_string(string)`
+> `Mumble.set_bandwidth(int)`
 
 Set the application name that will be sent to the server. Must be done before the `start()`.
 
+> `Mumble.set_application_string(string)`
+
+Set in second how long the library will wait for an incoming message, which slowdown the loop. Must be small enough for the audio treatment you need, but if too small it will consume too much CPU 0.01 is the default and seems to be small enough to send audio in 20ms packets. For application that just receive sound, bigger should be enough (like 0.05).
+
 > `Mumble.set_loop_rate(float)`
-
-Set in second how long the library will wait for an incoming message, which slowdown the loop.
-Must be small enough for the audio treatment you need, but if too small it will consume too much CPU
-0.01 is the default and seems to be small enough to send audio in 20ms packets.
-For application that just receive sound, bigger should be enough (like 0.05).
-
-> `Mumble.get_loop_rate()`
 
 Return the current `loop_rate`.
 
+> `Mumble.get_loop_rate()`
+
+By default, incoming sound is not treated. If you plan to use the incoming audio, you must set this to `True`, but then you have to get the audio out of the library regularly otherwise it will simply consume memory.
+
 > `Mumble.set_receive_sound(bool)`
 
-By default, incoming sound is not treated. If you plan to use the incoming audio, you must set this to `True`,
-but then you have to get the audio out of the library regularly otherwise it will simply consume memory.
+This function return the channel the bot is located. It's a Channel Object. It's a shortcut for `self.channels[self.users.myself["channel_id"]`
 
 > `Mumble.my_channel()`
 
-This function return the channel the bot is located. It's a Channel Object.
-It's a shortcut for `self.channels[self.users.myself["channel_id"]`
+This function ask Mumble to disconnect from the server manually.
 
 > `Mumble.stop()`
 
-This function ask Mumble to disconnect from the server manually.
-
 ## Callbacks object (accessible through Mumble.callbacks)
-Manage the different available callbacks.
-It is basically a `dict` of the available callbacks and the methods to manage them.
+
+Manage the different available callbacks. It is basically a `dict` of the available callbacks and the methods to manage them.
 
 Callback names are in `pymumble.constants` module, starting with `PYMUMBLE_CLBK_`
+
 - `PYMUMBLE_CLBK_CONNECTED`: connection succeeded
 - `PYMUMBLE_CLBK_DISCONNECTED`: Connection as been dropped
 - `PYMUMBLE_CLBK_CHANNELCREATED`: send the created channel object as parameter
@@ -77,66 +74,67 @@ Callback names are in `pymumble.constants` module, starting with `PYMUMBLE_CLBK_
 
 **Callbacks are executed within the library looping thread. Keep it's work short or you could have jitter issues!**
 
-> `Mumble.callbacks.set_callback(callback, function)`
-
 Assign a function to a callback (replace the previous ones if any).
 
-> `Mumble.callbacks.add_callback(callback, function)`
+> `Mumble.callbacks.set_callback(callback, function)`
 
 Assign an additional function to a callback.
 
-> `Mumble.callbacks.get_callback(callback)`
+> `Mumble.callbacks.add_callback(callback, function)`
 
 Return a list of functions assign to this callback or `None`.
 
-> `Mumble.callbacks.remove_callback(callback, function)`
+> `Mumble.callbacks.get_callback(callback)`
 
 Remove the specified function from the ones assign to this callback.
 
-> `Mumble.callbacks.reset_callback(callback)`
+> `Mumble.callbacks.remove_callback(callback, function)`
 
 Remove all defined callback functions for this callback.
 
-> `Mumble.callbacks.get_callbacks_list()`
+> `Mumble.callbacks.reset_callback(callback)`
 
 Return the list of all the available callbacks. Better use the constants though.
 
-## Users object (accessible through Mumble.users)
-Store the users connected on the server. For the application, it is basically only interesting as a `dict` of `User` objects,
-which contain the actual information.
+> `Mumble.callbacks.get_callbacks_list()`
 
-> `Mumble.users[int]`
+## Users object (accessible through Mumble.users)
+
+Store the users connected on the server. For the application, it is basically only interesting as a `dict` of `User` objects, which contain the actual information.
 
 Where `int` is the session number on the server. It points to the specific `User` object for this session.
 
-> `Mumble.users.count()`
+> `Mumble.users[int]`
 
 Return the number of connected users on the server.
 
-> `Mumble.users.myself_session`
+> `Mumble.users.count()`
 
 Contain the session number of the `pymumble` connection itself.
 
-> `Mumble.users.myself`
+> `Mumble.users.myself_session`
 
 Is a shortcut to `Mumble.users[Mumble.users.myself_session]`, pointing to the User object of the current connection.
 
+> `Mumble.users.myself`
+
+Is a shortcut to `mumble_pb2.PermissionDenied.DenyType.Name(n)`, the associated enum name for an action denial cause. (`n` comes from the callback for `PYMUMBLE_CLBK_PERMISSIONDENIED`: `event.type`).
+
 > `Mumble.denial_type(n)`
 
-Is a shortcut to `mumble_pb2.PermissionDenied.DenyType.Name(n)`, the associated enum name for an action denial cause. (`n` comes from the callback for `PYMUMBLE_CLBK_PERMISSIONDENIED`: `event.type`.
-
 ## User object (accessible through Mumble.users[session] or Mumble.users.myself
-Contain the users information and method to act on them.
-User also contain an instance of the SoundQueue object, containing the audio received from this user.
 
-> `User.sound`
+Contain the users information and method to act on them. User also contain an instance of the SoundQueue object, containing the audio received from this user.
 
 SoundQueue instance for this user.
 
-> `User.get_property()`
+> `User.sound`
 
 Return the value of the property.
 
+> `User.get_property()`
+
+Other functiions:
 > `User.mute()`
 > `User.unmute()`
 
@@ -149,21 +147,23 @@ Return the value of the property.
 > `User.recording()`
 > `User.unrecorfing()`
 
-> `User.comment(string)`
-
 Set the comment for this user.
 
-> `user.texture(texture)`
+> `User.comment(string)`
 
 Set the image for this user (must be a format recognized by the Mumble clients. PNG seems to work, I had issues with SVG).
 
-> `user.send_text_message(message)`
+> `user.texture(texture)`
 
 Send a message to the specific user.
 
-> `user.register()`
+> `user.send_text_message(message)`
 
 Send a register demand to the murmur server (you need to have a certfile
+
+> `user.register()`
+
+Administration functions:
 
 > `user.kick()`
 > `user.ban()`
@@ -171,170 +171,164 @@ Send a register demand to the murmur server (you need to have a certfile
 You can pass a keyword argument `reason=` if you'd like, defaults to empty string.
 
 ## SoundQueue object (accessible through User.sound)
-Contains the audio received from a specific user.
-Take care of the decoding and keep track on the timing of the reception.
 
-> `User.sound.set_receive_sound(bool)`
+Contains the audio received from a specific user. Take care of the decoding and keep track on the timing of the reception.
 
 Allow stopping treating incoming audio for a specific user if `False`. `True` by default.
 
+> `User.sound.set_receive_sound(bool)`
+
+Check if sound is present in this `SoundQueue`.
+
 > `User.sound.is_sound()`
 
-Return `True` if sound is present in this `SoundQueue`.
+Return a `SoundChunk` object containing the audio received in one packet coming from the server, and discard it from the list. If `duration` (in sec) is specified and smaller than the size of the next available audio, the split is taken care of.
+**Do not use a non 10ms multiple as it is the basic unit in Mumble.**
 
 > `User.sound.get_sound(duration=None)`
 
-Return a `SoundChunk` object containing the audio received in one packet coming from the server, and discard it from the list.
-If `duration` (in sec) is specified and smaller than the size of the next available audio, the split is taken care of.
-**Do not use a non 10ms multiple as it is the basic unit in Mumble.**
+Return a `SoundChunk` object (the next one) but do not discard it. Useful to check it's timing without actually treat it yet.
 
 > `User.sound.first_sound()`
 
-Return a `SoundChunk` object (the next one) but do not discard it.
-Useful to check it's timing without actually treat it yet.
-
 ## SoundChunk object (received from User.sound)
-It contains a sound unit, as received from the server.
-It as several properties
+
+It contains a sound unit, as received from the server. It as several properties
+
+Get the PCM buffer for this sound, in 16 bits signed mono little-endian 48000Hz format :
+
 > `SoundChunk.pcm`
-
-The PCM buffer for this sound, in 16 bits signed mono little-endian 48000Hz format.
-
-> `SoundChunk.timestamp`
 
 Time when the packet was received.
 
-> `SoundChunk.time`
+> `SoundChunk.timestamp`
 
 Time calculated based on Mumble sequences (better to reconstruct the stream).
 
-> `SoundChunk.sequence`
+> `SoundChunk.time`
 
 Mumble sequence for the packet.
 
-> `SoundChunk.size`
+> `SoundChunk.sequence`
 
 Size of the PCM in bytes.
 
-> `SoundChunk.duration`
+> `SoundChunk.size`
 
 Length of the PCM in secs.
 
-> `SoundChunk.type`
+> `SoundChunk.duration`
 
 Mumble type for the chunk (coded used).
 
-> `SoundChunk.target`
+> `SoundChunk.type`
 
 Target of the packet, as sent by the server.
 
+> `SoundChunk.target`
+
 ## Channels object (accessible through Mumble.channels)
-Contains the channels known on the server. Allow listing and finding them.
-It is again a `dict` by channel ids (root=0) containing all the Channel objects.
 
+Contains the channels known on the server. Allow listing and finding them. It is again a `dict` by channel ids (root=0) containing all the Channel objects.
+
+Search, starting from the root for every element a subchannel with the same name. Return the channel object or raise a `UnknownChannelError` exception.
 > `Mumble.channels.find_by_tree(iterable)`
-
-Search, starting from the root for every element a subchannel with the same name.
-Return the channel object or raise a `UnknownChannelError` exception.
-
-> `Mumble.channels.get_childs(channel_id)`
 
 Return a list of all the children objects for a channel id.
 
-> `Mumble.channels.get_descendants(channel_id)`
+
+> `Mumble.channels.get_childs(channel_id)`
 
 Return a (nested) list of the channels above this id.
 
+> `Mumble.channels.get_descendants(channel_id)`
+
+Create a channel with the given parameter. Set temporary to True to create temporary channel (The bot will automatically entered the new channel).
+
 > `Mumble.channels.new_channel(parent_id, name, temporary=False)`
 
-Create a channel with the given parameter.
-Set temporary to True to create temporary channel (The bot will automatically entered the new channel).
-
-> `Mumble.channels.remove_channel(channel_id)`
-
 Remove channel with the given id.
-
 **Don't forget to give the bot related acl to do administration job.**
 Using certificate and register the bot will ensure the bot can do the administration job.
 
-> `Mumble.channels.get_tree(channel_id)`
+
+> `Mumble.channels.remove_channel(channel_id)`
 
 Return a nested list of the channel objects above this id.
 
-> `Mumble.channels.find_by_name(name)`
+> `Mumble.channels.get_tree(channel_id)`
 
 Return the first channel object matching the name.
 
+> `Mumble.channels.find_by_name(name)`
+
+Unlink every channels in server. So there will be no channel linked to other channel.
+
 > `Mumble.channels.unlink_every_channel()`
 
-Unlink every channels in server.
-So there will be no channel linked to other channel.
-
 ## Channel object (accessible through Mumble.channels[channel_id] or Mumble.channels.find_by_name(Name))
-Contains the properties of the specific channel.
-Allow to move a user into it.
 
-> `Channel.get_property(name)`
+Contains the properties of the specific channel. Allow to move a user into it.
 
 Return the property value for this channel.
 
+> `Channel.get_property(name)`
+
+Move (or try to) a user's session into the channel. If no session specified, try to move the library application itself.
+
 > `Channel.move_in(session=None)`
-
-Move (or try to) a user's session into the channel.
-If no session specified, try to move the library application itself.
-
-> `Channel.remove()`
 
 Remove the given channel.
 
-> `Channel.send_text_message(message)`
+> `Channel.remove()`
 
 Send message into the specific channel.
 
+> `Channel.send_text_message(message)`
+
+List all users currently in channel. After moving into a channel, it's normal to not have the list of user. Pymumble need few ms to update the list.
+
 > `Channel.get_users()`
-
-List all users currently in channel.
-After moving into a channel, it's normal to not have the list of user. Pymumble need few ms to update the list.
-
-> `Channel.link(channel_id)`
 
 Link selected channel with other channel.
 
-> `Channel.unlink(channel_id)`
+> `Channel.link(channel_id)`
 
 Unlink one channel which is linked to the selected channel.
 
-> `Channel.unlink_all()`
+> `Channel.unlink(channel_id)`
 
 Unlink every channels which is linked to the selected channel.
 
-> `Channel.rename_channel(name)`
+> `Channel.unlink_all()`
 
 Rename channel with given name (str).
 
-> `Channel.move_channel(new_parent_id)`
+> `Channel.rename_channel(name)`
 
 Move channel inside new_parent_id (int).
 **Use Mumble.channels.find_by_name(name).get_id()** to get channel id
 
+> `Channel.move_channel(new_parent_id)`
+
+Change channel position with given position (int). Smaller position will place channel in the top. Higher position will place channel in the bottom. Negative integer can also be used, and it will be in the top of positive integer.
+
 > `Channel.set_channel_position(position)`
-
-Change channel position with given position (int).
-Smaller position will place channel in the top.
-Higher position will place channel in the bottom.
-Negative integer can also be used, and it will be in the top of positive integer.
-
-> `Channel.set_channel_max_users(max_users)`
 
 Change channel max users with given max_users (int).
 
-> `Channel.set_channel_description()`
+> `Channel.set_channel_max_users(max_users)`
 
 Change channel description with given max_users (str).
 
+> `Channel.set_channel_description()`
+
+Ask to the server an ACL permissions [object](https://github.com/mumble-voip/mumble/blob/master/src/Mumble.proto#L317) (requires bot have Write ACL permissions). This will invoke
+PYMUMBLE_CLBK_ACLRECEIVED.
+
 > `Channel.get_acl()`
 
-Request an ACL permissions [object](https://github.com/mumble-voip/mumble/blob/master/src/Mumble.proto#L317) (requires bot have Write ACL permissions). This will invoke PYMUMBLE_CLBK_ACLRECEIVED. Example of usage:
+Example of usage:
 
 ```
 def onacl(event):
@@ -346,38 +340,65 @@ Mumble.callbacks.set_callback(PYMUMBLE_CLBK_ACL_RECEIVED, onacl)
 Mumble.channels[0].get_acl() #Request ACL for root channel
 ```
 
-## SoundOutput object (accessible through Mumble.sound_output)
-Takes care of encoding, packetizing and sending the audio to the server.
+## ACL object
 
-> `Mumble.sound_output.set_audio_per_packet(float)`
+Contain the ACL (Channel Group and Channel ACL) of a specific channel. They are not populated by default, you need to ask them to the server with `Mumble.channels[<ID>].get_acl()`
+
+The function to modify user list inside ACL request automatically the ACL if not populated, but if the group does not exist, this will raise `ACLChanGroupNotExist`.
+The ACL object contain two lists of ChanGroup object (`groups`) and ChanACL object (`acls`).
+
+You can access to the ACL object from the channel one `mumble.channels[<ID>].acl.xxxx()`.
+
+Add user to include into an existent group
+
+> `ACL.add_user(group_name, user_id)`
+>
+> Example : `mumble.channels[<id>].acl.add_user('<groupe_name>', <user_id>)`
+
+Delete user from existent group
+
+> `ACL.del_user(group_name, user_id)`
+
+Add User explicitly removed from this group in this channel if the group has been inherited
+
+> `ACL.add_remove_user(group_name, user_id)`
+
+Delete user explicitly removed from this group in this channel if inherited
+
+> `ACL.del_remove_user(group_name, user_id)`
+
+## SoundOutput object (accessible through Mumble.sound_output)
+
+Takes care of encoding, packetizing and sending the audio to the server.
 
 Set the duration of one packet of audio in secs. Typically, 0.02 or 0.04. Max is 0.12 (codec limitations).
 
-> `Mumble.sound_output.get_audio_per_packet()`
+> `Mumble.sound_output.set_audio_per_packet(float)`
 
 Return the current length of an audio packet in secs.
 
-> `Mumble.sound_output.add_sound(string)`
+> `Mumble.sound_output.get_audio_per_packet()`
 
 Add PCM sound (16 bites mono 48000Hz little-endian encoded) to the outgoing queue.
 
-> `Mumble.sound_output.get_buffer_size()`
+> `Mumble.sound_output.add_sound(string)`
 
 Return in secs the size of the unsent audio buffer. Useful to transfer audio to the library at a regular pace.
 
-> `Mumble.sound_output.set_whisper(<session_id>)`
+> `Mumble.sound_output.get_buffer_size()`
 
 Set Whisper to an specific User Session-ID
 
-> `Mumble.sound_output.set_whisper([list of session_id])`
+> `Mumble.sound_output.set_whisper(<session_id>)`
 
 Set Whisper to multiple Users
 
-> ``Mumble.sound_output.set_whisper(<channel_id>, channel=True)``
+> `Mumble.sound_output.set_whisper([list of session_id])`
 
 Set Whisper to a specific Channel
 
-> ``Mumble.sound_output.remove_whisper()``
+> ``Mumble.sound_output.set_whisper(<channel_id>, channel=True)``
 
 Remove the previously set Whisper
 
+> ``Mumble.sound_output.remove_whisper()``

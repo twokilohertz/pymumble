@@ -382,7 +382,7 @@ class Mumble(threading.Thread):
             mess = mumble_pb2.ACL()
             mess.ParseFromString(message)
             self.Log.debug("message: ACL : %s", mess)
-
+            self.channels[mess.channel_id].update_acl(mess)
             self.callbacks(PYMUMBLE_CLBK_ACLRECEIVED, mess)
 
         elif type == PYMUMBLE_MSG_TYPES_QUERYUSERS:
@@ -701,6 +701,50 @@ class Mumble(threading.Thread):
             acl = mumble_pb2.ACL()
             acl.channel_id = cmd.parameters["channel_id"]
             acl.query = True
+            self.send_message(PYMUMBLE_MSG_TYPES_ACL, acl)
+            cmd.response = True
+            self.commands.answer(cmd)
+        elif cmd.cmd == PYMUMBLE_CMD_UPDATEACL:
+            acl = mumble_pb2.ACL()
+            acl.channel_id = cmd.parameters["channel_id"]
+            acl.inherit_acls = cmd.parameters["inherit_acls"]
+
+            for msg_group in cmd.parameters["chan_group"]:
+                chan_group = mumble_pb2.ACL.ChanGroup()
+                chan_group.name = msg_group['name']
+                if msg_group['inherited'] is not None:
+                    chan_group.inherited = msg_group['inherited']
+                if msg_group['inherit'] is not None:
+                    chan_group.inherit = msg_group['inherit']
+                if msg_group['inheritable'] is not None:
+                    chan_group.inheritable = msg_group['inheritable']
+                for add_id in msg_group['add']:
+                    chan_group.add.append(add_id)
+                for remove_id in msg_group['remove']:
+                    chan_group.remove.append(remove_id)
+                acl.groups.append(chan_group)
+
+            for msg_acl in cmd.parameters["chan_acl"]:
+                chan_acl = mumble_pb2.ACL.ChanACL()
+                if msg_acl['apply_here'] is not None:
+                    chan_acl.apply_here = msg_acl['apply_here']
+                if msg_acl['apply_subs'] is not None:
+                    chan_acl.apply_subs = msg_acl['apply_subs']
+                if msg_acl['inherited'] is not None:
+                    chan_acl.inherited = msg_acl['inherited']
+                if msg_acl['user_id'] is not None:
+                    chan_acl.user_id = msg_acl['user_id']
+                if msg_acl['group'] is not None:
+                    chan_acl.group = msg_acl['group']
+                if msg_acl['grant'] is not None:
+                    chan_acl.grant = msg_acl['grant']
+                if msg_acl['deny'] is not None:
+                    chan_acl.deny = msg_acl['deny']
+
+                if not chan_acl.inherited:
+                    acl.acls.append(chan_acl)
+
+            acl.query = False
             self.send_message(PYMUMBLE_MSG_TYPES_ACL, acl)
             cmd.response = True
             self.commands.answer(cmd)

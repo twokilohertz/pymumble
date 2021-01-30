@@ -61,6 +61,7 @@ class ModUserState(Cmd):
         self.cmd = PYMUMBLE_CMD_MODUSERSTATE
         self.parameters = params
 
+
 class RemoveUser(Cmd):
     """Command to kick (ban=False) or ban (ban=True) a user"""
 
@@ -69,6 +70,7 @@ class RemoveUser(Cmd):
 
         self.cmd = PYMUMBLE_CMD_REMOVEUSER
         self.parameters = params
+
 
 class CreateChannel(Cmd):
     """Command to create channel"""
@@ -91,6 +93,7 @@ class RemoveChannel(Cmd):
         self.cmd = PYMUMBLE_MSG_TYPES_CHANNELREMOVE
         self.parameters = {"channel_id": channel_id}
 
+
 class UpdateChannel(Cmd):
     """Command to update channel"""
 
@@ -99,6 +102,7 @@ class UpdateChannel(Cmd):
 
         self.cmd = PYMUMBLE_CMD_UPDATECHANNEL
         self.parameters = params
+
 
 class VoiceTarget(Cmd):
     """Command to create a whisper"""
@@ -110,6 +114,7 @@ class VoiceTarget(Cmd):
         self.parameters = {"id": voice_id,
                            "targets": targets}
 
+
 class LinkChannel(Cmd):
     """Command to link channel"""
 
@@ -118,6 +123,7 @@ class LinkChannel(Cmd):
 
         self.cmd = PYMUMBLE_CMD_LINKCHANNEL
         self.parameters = params
+
 
 class UnlinkChannel(Cmd):
     """Command to unlink channel"""
@@ -128,6 +134,7 @@ class UnlinkChannel(Cmd):
         self.cmd = PYMUMBLE_CMD_UNLINKCHANNEL
         self.parameters = params
 
+
 class QueryACL(Cmd):
     """Command to query ACL information for channel"""
 
@@ -136,3 +143,16 @@ class QueryACL(Cmd):
 
         self.cmd = PYMUMBLE_CMD_QUERYACL
         self.parameters = {"channel_id": channel_id}
+
+
+class UpdateACL(Cmd):
+    """Command to Update ACL information for channel"""
+
+    def __init__(self, channel_id, inherit_acls, chan_group, chan_acl):
+        Cmd.__init__(self)
+
+        self.cmd = PYMUMBLE_CMD_UPDATEACL
+        self.parameters = {"channel_id": channel_id,
+                           "inherit_acls": inherit_acls,
+                           "chan_group": chan_group,
+                           "chan_acl": chan_acl}

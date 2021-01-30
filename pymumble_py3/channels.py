@@ -2,6 +2,7 @@
 from .constants import *
 from threading import Lock
 from .errors import UnknownChannelError, TextTooLongError, ImageTooBigError
+from .acl import ACL
 from . import messages
 
 
@@ -124,6 +125,7 @@ class Channels(dict):
                 cmd = messages.UnlinkChannel({"channel_id": channel['channel_id'], "remove_ids": channel["links"]})
                 self.mumble_object.execute_command(cmd)
 
+
 class Channel(dict):
     """
     Stores information about one specific channel
@@ -132,6 +134,7 @@ class Channel(dict):
     def __init__(self, mumble_object, message):
         self.mumble_object = mumble_object
         self["channel_id"] = message.channel_id
+        self.acl = ACL(mumble_object=mumble_object, channel_id=self["channel_id"])
         self.update(message)
 
     def get_users(self):
@@ -158,6 +161,9 @@ class Channel(dict):
                 self.mumble_object.blobs.get_channel_description(message.description_hash)
 
         return actions  # return a dict with updates performed, useful for the callback functions
+
+    def update_acl(self, message):
+        self.acl.update(message)
 
     def get_id(self):
         return self["channel_id"]

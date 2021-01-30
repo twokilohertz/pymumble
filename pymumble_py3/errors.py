@@ -89,3 +89,13 @@ class ImageTooBigError(Exception):
 
     def __str__(self):
         return 'Maximum Text/Image allowed length: {}'.format(self.value)
+
+
+class ACLChanGroupNotExist(Exception):
+    """Thrown when trying to update an non-existant ACL ChanGroup"""
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return 'ACL ChanGroup does not exist: {}'.format(self.value)
