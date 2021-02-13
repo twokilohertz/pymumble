@@ -46,7 +46,7 @@ class CryptStateOCB2:
         tLastGood
     """
     _raw_key: bytes         # AES key; access through `raw_key` property
-    _aes: AES.AESCipher     # pycrypto AES cipher object, replaced when `raw_key` is changed
+    _aes: object            # pycrypto AES cipher object, replaced when `raw_key` is changed
     _encrypt_iv: bytearray  # IV for encryption, access through `encrypt_iv` property
     _decrypt_iv: bytearray  # IV for decryption, access through `decrypt_iv` property
     decrypt_history: bytearray  # History of previous decrypt_iv values
@@ -230,7 +230,7 @@ class CryptStateOCB2:
         return dst
 
 
-def ocb_encrypt(aes: AES.AESCipher,
+def ocb_encrypt(aes: object,
                 plain: bytes,
                 nonce: bytes,
                 *,
@@ -289,7 +289,7 @@ def ocb_encrypt(aes: AES.AESCipher,
     return encrypted, tag
 
 
-def ocb_decrypt(aes: AES.AESCipher,
+def ocb_decrypt(aes: object,
                 encrypted: bytes,
                 nonce: bytes,
                 len_plain: int,
