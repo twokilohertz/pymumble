@@ -45,8 +45,9 @@ class ACL(dict):
 
     def add_user(self, group_name, user_id):
         self.ask_update_if_not_exist(group_name)
-        self.groups[group_name].add.append(user_id)
-        self.send_update()
+        if user_id not in self.groups[group_name].add:
+            self.groups[group_name].add.append(user_id)
+            self.send_update()
 
     def del_user(self, group_name, user_id):
         self.ask_update_if_not_exist(group_name)
@@ -55,8 +56,9 @@ class ACL(dict):
 
     def add_remove_user(self, group_name, user_id):
         self.ask_update_if_not_exist(group_name)
-        self.groups[group_name].remove.append(user_id)
-        self.send_update()
+        if user_id not in self.groups[group_name].remove:
+            self.groups[group_name].remove.append(user_id)
+            self.send_update()
 
     def del_remove_user(self, group_name, user_id):
         self.ask_update_if_not_exist(group_name)
