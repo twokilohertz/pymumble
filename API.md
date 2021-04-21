@@ -1,7 +1,20 @@
 API
 ===
+-----
+## Table of objects:
+1. [Main Mumble](#main-mumble-object)
+1. [Callbacks](#callbacks-object)
+1. [Users](#users-object)
+1. [User](#user-object)
+1. [SoundQueue](#soundqueue-object)
+1. [SoundChunk](#soundchunk-object)
+1. [Channels](#channels-object)
+1. [Channel](#channel-object)
+1. [ACL](#acl-object)
+1. [SoundOutput](#soundoutput-object)
 
-## main Mumble object
+
+## Main Mumble object
 
 > `class Mumble(host, user, port=64738, password='', certfile=None, keyfile=None, reconnect=False, tokens=[], stereo=False,debug=False)`
 
@@ -53,7 +66,8 @@ This function ask Mumble to disconnect from the server manually.
 
 > `Mumble.stop()`
 
-## Callbacks object (accessible through Mumble.callbacks)
+## Callbacks object
+### Accessible through Mumble.callbacks
 
 Manage the different available callbacks. It is basically a `dict` of the available callbacks and the methods to manage them.
 
@@ -98,7 +112,8 @@ Return the list of all the available callbacks. Better use the constants though.
 
 > `Mumble.callbacks.get_callbacks_list()`
 
-## Users object (accessible through Mumble.users)
+## Users object
+### Accessible through Mumble.users
 
 Store the users connected on the server. For the application, it is basically only interesting as a `dict` of `User` objects, which contain the actual information.
 
@@ -122,7 +137,8 @@ Is a shortcut to `mumble_pb2.PermissionDenied.DenyType.Name(n)`, the associated 
 
 > `Mumble.denial_type(n)`
 
-## User object (accessible through Mumble.users[session] or Mumble.users.myself
+## User object
+### Accessible through Mumble.users[session] or Mumble.users.myself
 
 Contain the users information and method to act on them. User also contain an instance of the SoundQueue object, containing the audio received from this user.
 
@@ -170,7 +186,8 @@ Administration functions:
 
 You can pass a keyword argument `reason=` if you'd like, defaults to empty string.
 
-## SoundQueue object (accessible through User.sound)
+## SoundQueue object
+### Accessible through User.sound
 
 Contains the audio received from a specific user. Take care of the decoding and keep track on the timing of the reception.
 
@@ -191,7 +208,8 @@ Return a `SoundChunk` object (the next one) but do not discard it. Useful to che
 
 > `User.sound.first_sound()`
 
-## SoundChunk object (received from User.sound)
+## SoundChunk object
+### Received from User.sound
 
 It contains a sound unit, as received from the server. It as several properties
 
@@ -227,7 +245,8 @@ Target of the packet, as sent by the server.
 
 > `SoundChunk.target`
 
-## Channels object (accessible through Mumble.channels)
+## Channels object
+### Accessible through Mumble.channels
 
 Contains the channels known on the server. Allow listing and finding them. It is again a `dict` by channel ids (root=0) containing all the Channel objects.
 
@@ -266,7 +285,8 @@ Unlink every channels in server. So there will be no channel linked to other cha
 
 > `Mumble.channels.unlink_every_channel()`
 
-## Channel object (accessible through Mumble.channels[channel_id] or Mumble.channels.find_by_name(Name))
+## Channel object
+### Accessible through Mumble.channels[channel_id] or Mumble.channels.find_by_name(Name))
 
 Contains the properties of the specific channel. Allow to move a user into it.
 
@@ -324,30 +344,37 @@ Change channel description with given max_users (str).
 > `Channel.set_channel_description()`
 
 Ask to the server an ACL permissions [object](https://github.com/mumble-voip/mumble/blob/master/src/Mumble.proto#L317) (requires bot have Write ACL permissions). This will invoke
-PYMUMBLE_CLBK_ACLRECEIVED.
+PYMUMBLE_CLBK_ACLRECEIVED. This is an async task, it don't wait the server answer, so when this function return, you don't have the ACL yet.
 
-> `Channel.get_acl()`
+> `Channel.request_acl()`
 
 Example of usage:
 
-```
+```python3
 def onacl(event):
 	for group in event.groups:
 		if event.group.name == "admin":
 			print("The admin IDs are: ", [user for user in group.add])
 
 Mumble.callbacks.set_callback(PYMUMBLE_CLBK_ACL_RECEIVED, onacl)
-Mumble.channels[0].get_acl() #Request ACL for root channel
+Mumble.channels[0].request_acl() #Request ACL for root channel
 ```
-
+or see [ACL object](#acl-object)
+```python3
+Mumble.channels[0].acl.request_group_update(group_name="admin") # Raise ACLChanGroupNotExist if group doesn't exist
+print("The admin IDs are: ", [user for users in Mumble.channels[0].acl.groups['admin'].add])
+```
 ## ACL object
+### Accessible through Channel.ACL
 
-Contain the ACL (Channel Group and Channel ACL) of a specific channel. They are not populated by default, you need to ask them to the server with `Mumble.channels[<ID>].get_acl()`
+Contain the ACL (Channel Group and Channel ACL) of a specific channel.
+The ACL object contain two lists of ChanGroup object (`groups`) and ChanACL object (`acls`). 
 
-The function to modify user list inside ACL request automatically the ACL if not populated, but if the group does not exist, this will raise `ACLChanGroupNotExist`.
-The ACL object contain two lists of ChanGroup object (`groups`) and ChanACL object (`acls`).
+They are not populated by default, you need to ask them to the server with `Mumble.channels[<ID>].request_acl()`. This function is async, it only send the ACL requests but do not wait for the answer, so when this function return, you don't have the ACL yet. So should look for `PYMUMBLE_CLBK_ACL_RECEIVED` callback or wait a little. But if you want a specific group name ACL, you can use the internal function `Channel.acl.request_group_update(group_name='admin')`
 
 You can access to the ACL object from the channel one `mumble.channels[<ID>].acl.xxxx()`.
+
+The functions to modify user list (add and/or delete) inside ACL request automatically the ACL if not populated. If the group does not exist, this will raise `ACLChanGroupNotExist`. If you already know which group you want to modify, using the following function without `request_acl()` is best practice.
 
 Add user to include into an existent group
 
@@ -367,7 +394,8 @@ Delete user explicitly removed from this group in this channel if inherited
 
 > `ACL.del_remove_user(group_name, user_id)`
 
-## SoundOutput object (accessible through Mumble.sound_output)
+## SoundOutput object
+### Accessible through Mumble.sound_output
 
 Takes care of encoding, packetizing and sending the audio to the server.
 

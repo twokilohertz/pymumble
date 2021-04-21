@@ -17,7 +17,6 @@ class ACL(dict):
 
     def update(self, message):
         self.lock.acquire()
-        print(message)
         self.inherit_acls = bool(message.inherit_acls)
         for msg_group in message.groups:
             if msg_group.name in self.groups:
@@ -33,9 +32,9 @@ class ACL(dict):
                 self.acls[msg_acl.group].update(msg_acl)
         self.lock.release()
 
-    def ask_update_if_not_exist(self, group_name):
+    def request_group_update(self, group_name):
         if group_name not in self.groups:
-            self.mumble_object.channels[self.channel_id].get_acl()
+            self.mumble_object.channels[self.channel_id].request_acl()
             i = 0
             while group_name not in self.groups and i < 20:
                 time.sleep(0.2)
@@ -44,24 +43,24 @@ class ACL(dict):
                 raise ACLChanGroupNotExist(group_name)
 
     def add_user(self, group_name, user_id):
-        self.ask_update_if_not_exist(group_name)
+        self.request_group_update(group_name)
         if user_id not in self.groups[group_name].add:
             self.groups[group_name].add.append(user_id)
             self.send_update()
 
     def del_user(self, group_name, user_id):
-        self.ask_update_if_not_exist(group_name)
+        self.request_group_update(group_name)
         self.groups[group_name].add.remove(user_id)
         self.send_update()
 
     def add_remove_user(self, group_name, user_id):
-        self.ask_update_if_not_exist(group_name)
+        self.request_group_update(group_name)
         if user_id not in self.groups[group_name].remove:
             self.groups[group_name].remove.append(user_id)
             self.send_update()
 
     def del_remove_user(self, group_name, user_id):
-        self.ask_update_if_not_exist(group_name)
+        self.request_group_update(group_name)
         self.groups[group_name].remove.remove(user_id)
         self.send_update()
 

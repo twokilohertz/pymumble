@@ -269,6 +269,6 @@ class Channel(dict):
         cmd = messages.UpdateChannel(params)
         self.mumble_object.execute_command(cmd)
 
-    def get_acl(self):
+    def request_acl(self):
         cmd = messages.QueryACL(self["channel_id"])
         self.mumble_object.execute_command(cmd)
