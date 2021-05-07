@@ -144,13 +144,17 @@ class Mumble(threading.Thread):
 
     def connect(self):
         """Connect to the server"""
-        # Get IPv4/IPv6 server address
-        server_info = socket.getaddrinfo(self.host, self.port, type=socket.SOCK_STREAM)
+        try:
+            # Get IPv4/IPv6 server address
+            server_info = socket.getaddrinfo(self.host, self.port, type=socket.SOCK_STREAM)
 
-        # Connect the SSL tunnel
-        self.Log.debug("connecting to %s (%s) on port %i.", self.host, server_info[0][1], self.port)
-        std_sock = socket.socket(server_info[0][0], socket.SOCK_STREAM)
-        std_sock.settimeout(10)
+            # Connect the SSL tunnel
+            self.Log.debug("connecting to %s (%s) on port %i.", self.host, server_info[0][1], self.port)
+            std_sock = socket.socket(server_info[0][0], socket.SOCK_STREAM)
+            std_sock.settimeout(10)
+        except socket.error:
+            self.connected = PYMUMBLE_CONN_STATE_FAILED
+            return self.connected
 
         try:
             self.control_socket = ssl.wrap_socket(std_sock, certfile=self.certfile, keyfile=self.keyfile, ssl_version=ssl.PROTOCOL_TLS)
