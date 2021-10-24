@@ -2,7 +2,6 @@
 from .constants import *
 from .errors import TextTooLongError, ImageTooBigError
 from threading import Lock
-from . import soundqueue
 from . import messages
 from . import mumble_pb2
 
@@ -64,7 +63,11 @@ class User(dict):
         self["channel_id"] = 0
         self.update(message)
 
-        self.sound = soundqueue.SoundQueue(self.mumble_object)  # will hold this user incoming audio
+        if mumble_object.receive_sound:
+            from . import soundqueue
+            self.sound = soundqueue.SoundQueue(self.mumble_object)  # will hold this user incoming audio
+        else:
+            self.sound = None
 
     def update(self, message):
         """Update user state, based on an incoming message"""

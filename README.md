@@ -11,7 +11,7 @@ The wiki/API explanation is [HERE](https://github.com/azlux/pymumble/blob/pymumb
 
 ### Requirements
 
-**`libopus` is a mandatory OS library**. Please refer to your package manager to install it.
+**`libopus` is a mandatory OS library when sending and receiving audio**. Please refer to your package manager to install it.
 
 ### With pip
 
