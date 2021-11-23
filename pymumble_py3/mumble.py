@@ -695,6 +695,10 @@ class Mumble(threading.Thread):
                 userstate.user_id = cmd.parameters["user_id"]
             if "plugin_context" in cmd.parameters:
                 userstate.plugin_context = cmd.parameters["plugin_context"]
+            if "listening_channel_add" in cmd.parameters:
+                userstate.listening_channel_add.extend(cmd.parameters["listening_channel_add"])
+            if "listening_channel_remove" in cmd.parameters:
+                userstate.listening_channel_remove.extend(cmd.parameters["listening_channel_remove"])
 
             self.send_message(PYMUMBLE_MSG_TYPES_USERSTATE, userstate)
             cmd.response = True

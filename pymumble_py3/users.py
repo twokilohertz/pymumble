@@ -265,3 +265,19 @@ class User(dict):
 
         cmd = messages.RemoveUser(self.mumble_object.users.myself_session, params)
         self.mumble_object.execute_command(cmd)
+
+    def add_listening_channels(self, channel):
+        """Add user to listening channel"""
+        params = {"session": self["session"],
+                  "listening_channel_add": channel}
+
+        cmd = messages.ModUserState(self.mumble_object.users.myself_session, params)
+        self.mumble_object.execute_command(cmd)
+
+    def remove_listening_channels(self, channel):
+        """Remove user from listening channel"""
+        params = {"session": self["session"],
+                  "listening_channel_remove": channel}
+
+        cmd = messages.ModUserState(self.mumble_object.users.myself_session, params)
+        self.mumble_object.execute_command(cmd)
