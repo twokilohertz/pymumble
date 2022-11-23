@@ -169,7 +169,11 @@ class Mumble(threading.Thread):
 
             # Perform the Mumble authentication
             version = mumble_pb2.Version()
-            version.version = (PYMUMBLE_PROTOCOL_VERSION[0] << 16) + (PYMUMBLE_PROTOCOL_VERSION[1] << 8) + PYMUMBLE_PROTOCOL_VERSION[2]
+            if PYMUMBLE_PROTOCOL_VERSION[2] > 255:
+                version.version_v1 = (PYMUMBLE_PROTOCOL_VERSION[0] << 16) + (PYMUMBLE_PROTOCOL_VERSION[1] << 8) + 255
+            else:
+                version.version_v1 = (PYMUMBLE_PROTOCOL_VERSION[0] << 16) + (PYMUMBLE_PROTOCOL_VERSION[1] << 8) + (PYMUMBLE_PROTOCOL_VERSION[2])
+            version.version_v2 = (PYMUMBLE_PROTOCOL_VERSION[0] << 48) + (PYMUMBLE_PROTOCOL_VERSION[1] << 32) + (PYMUMBLE_PROTOCOL_VERSION[2] << 16)
             version.release = self.application
             version.os = PYMUMBLE_OS_STRING
             version.os_version = PYMUMBLE_OS_VERSION_STRING
