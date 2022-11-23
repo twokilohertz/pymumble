@@ -17,7 +17,7 @@ PYMUMBLE_LOOP_RATE = 0.01   # pause done between two iteration of the main loop 
 # ============================================================================
 # Constants
 # ============================================================================
-PYMUMBLE_PROTOCOL_VERSION = (1, 2, 4)
+PYMUMBLE_PROTOCOL_VERSION = (1, 4, 287)
 PYMUMBLE_VERSION_STRING = "PyMumble %s" % PYMUMBLE_VERSION
 PYMUMBLE_OS_STRING = "PyMumble %s" % PYMUMBLE_VERSION
 PYMUMBLE_OS_VERSION_STRING = "Python %s - %s %s" % (sys.version, platform.system(), platform.release())
